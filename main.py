@@ -95,8 +95,6 @@ def process_xloc_package(xloc_dir):
         print(f"No .xliff file found for language code '{language_code}' in {xliff_path}")
 
 
-# Set your OpenAI API key
-
 # Check if a command-line argument is provided
 if len(sys.argv) < 2:
     print("Usage: python main.py <xloc_path>")
