@@ -1,0 +1,4 @@
+openai
+langcodes
+language-data
+python-dotenv
