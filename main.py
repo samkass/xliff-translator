@@ -27,12 +27,14 @@ def translate_text(text, target_language, note):
                                                   messages=[
                                                       {"role": "system", "content": "You are a translator model."},
                                                       {"role": "user",
-                                                       "content": f"Translate the text below (between the "
+                                                       "content": f"Translate the text between the "
                                                                   f"<text></text> tags to {target_language}. Return "
                                                                   f"only the translated string (no <text></text> "
-                                                                  f"tags). The "
-                                                                  f"following translation note applies: '{note}'. "
-                                                                  f"Text: <text>{text}</text>"}
+                                                                  f"tags). Be careful with legal terms such as "
+                                                                  f"'patent-pending'. The"
+                                                                  f"following translation note applies regarding this "
+                                                                  f"text: '{note}'."
+                                                                  f"<text>{text}</text>"}
                                                   ])
         translation = response.choices[0].message.content.strip()
         print(f"Translated text: {translation}")
