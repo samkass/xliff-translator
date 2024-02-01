@@ -11,7 +11,7 @@ OPENAI_API_KEY=<your key here>
 ```
 4. Run the app with `python main.py <xloc_path>`, where "xloc_path" is the  xloc directory to translate.
 
-The application will then find the xliff file within the directory, use the directory name as the localization language, and submit the entries one at a time to ChatGPT's "gpt-3.5-turbo" model for translation, and insert the translations back into the .xliff file. (The original .xliff file will be saved as `orig-<filename>.xliff`, and the new file will be saved as `<filename>.xliff`.)
+The application will then find the xliff file within the directory, use the directory name as the localization language, and submit the entries one at a time to ChatGPT's "gpt-3.5-turbo" model for translation, and insert the translations back into the .xliff file.
 
 ## Notes
 To generate the .xloc file(s) in the first place, in XCode go to Product > Export Localizations... and select the languages you want to localize for. This will generate a .xloc file for each language, which you can then use with this utility to translate.
