@@ -23,6 +23,10 @@ def get_language_name_from_code(code):
 
 def translate_text(text, target_language, note):
     try:
+        if note is None:
+            prompt_note = ""
+        else:
+            prompt_note = f"For context, after it is translated, the text will be used here in the app: '{note}'."
         response = client.chat.completions.create(model="gpt-3.5-turbo",  # Update the model if needed
                                                   messages=[
                                                       {"role": "system", "content": "You are a translator model."},
@@ -31,9 +35,7 @@ def translate_text(text, target_language, note):
                                                                   f"<text></text> tags to {target_language}. Return "
                                                                   f"only the translated string (no <text></text> "
                                                                   f"tags). Be careful with legal terms such as "
-                                                                  f"'patent-pending'. The"
-                                                                  f"following translation note applies regarding this "
-                                                                  f"text: '{note}'."
+                                                                  f"'patent-pending'. {prompt_note}"
                                                                   f"<text>{text}</text>"}
                                                   ])
         translation = response.choices[0].message.content.strip()
@@ -74,11 +76,20 @@ def process_xliff_file(xliff_path):
     orig_path = os.path.join(os.path.dirname(xliff_path), orig_filename)
 
     # Rename the original file
+    print(f"Renaming original file to {orig_path}.")
     os.rename(xliff_path, orig_path)
 
     # Write the modified XML data to the original filename
-    print(f"Writing translated file to {xliff_path}. (saving original as {orig_path})")
-    tree.write(xliff_path, encoding='UTF-8', xml_declaration=True)
+    try:
+        print(f"Writing translated file to {xliff_path}.")
+        tree.write(xliff_path, encoding='UTF-8', xml_declaration=True)
+        print(f"Success! Removing original file {orig_path}.")
+        os.remove(orig_path)
+    except Exception as e:
+        print(f"An error occurred while writing the translated file: {e}")
+        print(f"Restoring original file to {xliff_path}. (original file is {orig_path})")
+        os.remove(xliff_path)
+        os.rename(orig_path, xliff_path)
 
 
 def process_xloc_package(xloc_dir):
