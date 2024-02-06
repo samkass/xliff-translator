@@ -9,9 +9,9 @@ ET.register_namespace('', 'urn:oasis:names:tc:xliff:document:1.2')
 ET.register_namespace('xsi', 'http://www.w3.org/2001/XMLSchema-instance')
 
 
-def process_xliff_file(xliff_path, translator):
+def process_xliff_file(xliff_path, translator, source_language):
     # Extract language code from the filename
-    language_code = os.path.basename(xliff_path).split('.')[0]
+    target_language_code = os.path.basename(xliff_path).split('.')[0]
 
     # Parse the XML file
     tree = ET.parse(xliff_path)
@@ -23,7 +23,7 @@ def process_xliff_file(xliff_path, translator):
             note = trans_unit.find('{urn:oasis:names:tc:xliff:document:1.2}note').text
 
             # Translate the source text
-            translated_text = translator.translate_text(source, language_code, note)
+            translated_text = translator.translate_text(source, source_language, target_language_code, note)
 
             # Create or update the target element
             if translated_text:
@@ -57,7 +57,7 @@ def process_xliff_file(xliff_path, translator):
         os.rename(orig_path, xliff_path)
 
 
-def process_xloc_package(xloc_dir, translator):
+def process_xloc_package(xloc_dir, translator, source_language):
     directory, filename = os.path.split(xloc_dir)
 
     # Extract the language code from the .xcloc filename
@@ -68,16 +68,16 @@ def process_xloc_package(xloc_dir, translator):
 
     # Check if the .xliff file exists
     if os.path.isfile(xliff_path):
-        process_xliff_file(xliff_path, translator)
+        process_xliff_file(xliff_path, translator, source_language)
     else:
         print(f"No .xliff file found for language code '{language_code}' in {xliff_path}")
 
 
 parser = argparse.ArgumentParser(description='Translate XLOC package using translation API.')
 parser.add_argument('path', type=str, help='Path to the XLOC package')
-parser.add_argument('--engine', choices=['openai', 'deepl'], default='deepl', help='Translation engine to use')
+parser.add_argument('--engine', choices=['openai', 'deepl'], default='deepl', nargs='?', help='Translation engine to use')
+parser.add_argument('--source', type=str, default='EN', nargs='?', help='Source language code (eg. "EN")')
 args = parser.parse_args()
-path = args.path
 translator = None
 
 if args.engine == 'openai':
@@ -87,5 +87,5 @@ else:
     print(f"Translating text with DeepL")
     translator = DeepLTranslator()
 
-print(f"Processing XLOC package at {path} with engine {args.engine}...")
-process_xloc_package(path, translator)
+print(f"Processing XLOC package at {args.path} from language {args.source} with engine {args.engine}...")
+process_xloc_package(args.path, translator, args.source)

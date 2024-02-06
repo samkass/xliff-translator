@@ -19,10 +19,10 @@ class DeepLTranslator(Translator):
             # Initialize your configuration settings here
         return cls._instance
 
-    def translate_text(self, text, target_language, note):
+    def translate_text(self, text, source_language, target_language, note):
         try:
             text = self.deepl_client.translate_text(text,
-                                                    source_lang="EN",
+                                                    source_lang=source_language.upper(),
                                                     target_lang=target_language.upper(),
                                                     context=note)
             translation = text.text

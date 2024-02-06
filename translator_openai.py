@@ -18,13 +18,15 @@ class OpenAITranslator(Translator):
             # Initialize your configuration settings here
         return cls._instance
 
-    def get_language_name_from_code(code):
+    @staticmethod
+    def get_language_name_from_code(language_code):
         # Use langcodes to get the full language name
-        return langcodes.Language.get(code).language_name()
+        return langcodes.Language.get(language_code).language_name()
 
-    def translate_text(self, text, target_language, note):
+    def translate_text(self, text, source_language, target_language, note):
         try:
-            target_language = self.get_language_name_from_code(target_language)
+            source_language_name = self.get_language_name_from_code(source_language)
+            target_language_name = self.get_language_name_from_code(target_language)
             if note is None:
                 prompt_note = ""
             else:
@@ -34,7 +36,8 @@ class OpenAITranslator(Translator):
                                                                       {"role": "system", "content": "You are a translator model."},
                                                                       {"role": "user",
                                                                        "content": f"Translate the text between the "
-                                                                                  f"<text></text> tags to {target_language}. Return "
+                                                                                  f"<text></text> tags from {source_language_name} "
+                                                                                  f"to {target_language_name}. Return "
                                                                                   f"only the translated string (no <text></text> "
                                                                                   f"tags). Be careful with legal terms such as "
                                                                                   f"'patent-pending'. {prompt_note}"
