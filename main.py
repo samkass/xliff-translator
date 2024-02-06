@@ -1,55 +1,17 @@
-from dotenv import load_dotenv
 import os
-import sys
+import argparse
 import xml.etree.ElementTree as ET
-from openai import OpenAI
-import langcodes
 
-# Load environment variables from .env file
-load_dotenv()
-
-# Now you can use os.getenv to get your environment variables
-openai_api_key = os.getenv('OPENAI_API_KEY')
-client = OpenAI(api_key=openai_api_key)
+from translator_deepl import DeepLTranslator
+from translator_openai import OpenAITranslator
 
 ET.register_namespace('', 'urn:oasis:names:tc:xliff:document:1.2')
 ET.register_namespace('xsi', 'http://www.w3.org/2001/XMLSchema-instance')
 
 
-def get_language_name_from_code(code):
-    # Use langcodes to get the full language name
-    return langcodes.Language.get(code).language_name()
-
-
-def translate_text(text, target_language, note):
-    try:
-        if note is None:
-            prompt_note = ""
-        else:
-            prompt_note = f"For context, after it is translated, the text will be used here in the app: '{note}'."
-        response = client.chat.completions.create(model="gpt-3.5-turbo",  # Update the model if needed
-                                                  messages=[
-                                                      {"role": "system", "content": "You are a translator model."},
-                                                      {"role": "user",
-                                                       "content": f"Translate the text between the "
-                                                                  f"<text></text> tags to {target_language}. Return "
-                                                                  f"only the translated string (no <text></text> "
-                                                                  f"tags). Be careful with legal terms such as "
-                                                                  f"'patent-pending'. {prompt_note}"
-                                                                  f"<text>{text}</text>"}
-                                                  ])
-        translation = response.choices[0].message.content.strip()
-        print(f"Translated text: {translation}")
-        return translation
-    except Exception as e:
-        print(f"An error occurred during translation: {e}")
-        return None
-
-
-def process_xliff_file(xliff_path):
+def process_xliff_file(xliff_path, translator):
     # Extract language code from the filename
     language_code = os.path.basename(xliff_path).split('.')[0]
-    target_language = get_language_name_from_code(language_code)
 
     # Parse the XML file
     tree = ET.parse(xliff_path)
@@ -61,7 +23,7 @@ def process_xliff_file(xliff_path):
             note = trans_unit.find('{urn:oasis:names:tc:xliff:document:1.2}note').text
 
             # Translate the source text
-            translated_text = translate_text(source, target_language, note)
+            translated_text = translator.translate_text(source, language_code, note)
 
             # Create or update the target element
             if translated_text:
@@ -69,6 +31,9 @@ def process_xliff_file(xliff_path):
                 if target is None:
                     target = ET.SubElement(trans_unit, 'target')
                 target.text = translated_text
+            else:
+                print(f"No translation returned for '{source}'")
+                raise Exception("Translation failed")
 
     # Write back the modified XML to the file
     # Construct the new filename (e.g., 'orig-fr.xliff')
@@ -92,7 +57,7 @@ def process_xliff_file(xliff_path):
         os.rename(orig_path, xliff_path)
 
 
-def process_xloc_package(xloc_dir):
+def process_xloc_package(xloc_dir, translator):
     directory, filename = os.path.split(xloc_dir)
 
     # Extract the language code from the .xcloc filename
@@ -103,16 +68,24 @@ def process_xloc_package(xloc_dir):
 
     # Check if the .xliff file exists
     if os.path.isfile(xliff_path):
-        process_xliff_file(xliff_path)
+        process_xliff_file(xliff_path, translator)
     else:
         print(f"No .xliff file found for language code '{language_code}' in {xliff_path}")
 
 
-# Check if a command-line argument is provided
-if len(sys.argv) < 2:
-    print("Usage: python main.py <xloc_path>")
-    sys.exit(1)
+parser = argparse.ArgumentParser(description='Translate XLOC package using translation API.')
+parser.add_argument('path', type=str, help='Path to the XLOC package')
+parser.add_argument('--engine', choices=['openai', 'deepl'], default='openai', help='Translation engine to use')
+args = parser.parse_args()
+path = args.path
+translator = None
 
-# The first command-line argument is the directory path
-directory_path = sys.argv[1]
-process_xloc_package(directory_path)
+if args.engine == 'openai':
+    print(f"Translating text with OpenAI")
+    translator = OpenAITranslator()
+else:
+    print(f"Translating text with DeepL")
+    translator = DeepLTranslator()
+
+print(f"Processing XLOC package at {path} with engine {args.engine}...")
+process_xloc_package(path, translator)
