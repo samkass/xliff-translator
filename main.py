@@ -12,11 +12,11 @@ ET.register_namespace('xsi', 'http://www.w3.org/2001/XMLSchema-instance')
 do_write = True
 
 
-def process_xliff_file(xliff_path, translator, source_language):
+def process_xliff_file(xliff_path, translator, source_language_code):
     # Extract language code from the filename
     target_language_code = os.path.basename(xliff_path).split('.')[0]
 
-    if source_language.upper() == target_language_code.upper():
+    if source_language_code is not None and source_language_code.upper() == target_language_code.upper():
         print(f"Skipping translation for {xliff_path} because source and target languages are the same.")
         return
 
@@ -30,7 +30,7 @@ def process_xliff_file(xliff_path, translator, source_language):
             note = trans_unit.find('{urn:oasis:names:tc:xliff:document:1.2}note').text
 
             # Translate the source text
-            translated_text = translator.translate_text(source, source_language, target_language_code, note)
+            translated_text = translator.translate_text(source, source_language_code, target_language_code, note)
 
             # Create or update the target element
             if translated_text:
@@ -67,32 +67,32 @@ def process_xliff_file(xliff_path, translator, source_language):
             os.rename(orig_path, xliff_path)
 
 
-def process_xcloc_package(xloc_dir, translator, source_language):
+def process_xcloc_package(xloc_dir, translator, source_language_code):
     print(f"Processing .xcloc package at {xloc_dir}...")
     directory, filename = os.path.split(xloc_dir)
 
     # Extract the language code from the .xcloc filename
-    language_code, _ = os.path.splitext(filename)
+    target_language_code, _ = os.path.splitext(filename)
 
     # Construct the path to the specific .xliff file
-    xliff_path = os.path.join(xloc_dir, 'Localized Contents', f'{language_code}.xliff')
+    xliff_path = os.path.join(xloc_dir, 'Localized Contents', f'{target_language_code}.xliff')
 
     # Check if the .xliff file exists
     if os.path.isfile(xliff_path):
-        process_xliff_file(xliff_path, translator, source_language)
+        process_xliff_file(xliff_path, translator, source_language_code)
     else:
-        print(f"No .xliff file found for language code '{language_code}' in {xliff_path}")
+        print(f"No .xliff file found for language code '{target_language_code}' in {xliff_path}")
 
 
-def process_translations_dir(translations_dir, translator, source_language):
+def process_translations_dir(translations_dir, translator, source_language_code):
     if translations_dir.endswith('.xcloc'):
-        process_xcloc_package(translations_dir, translator, source_language)
+        process_xcloc_package(translations_dir, translator, source_language_code)
     else:
         print(f"Processing directory at {translations_dir}...")
         for root, dirs, files in os.walk(translations_dir):
             for adir in dirs:
                 if adir.endswith('.xcloc'):
-                    process_xcloc_package(os.path.join(root, adir), translator, source_language)
+                    process_xcloc_package(os.path.join(root, adir), translator, source_language_code)
 
 
 parser = argparse.ArgumentParser(description='Translate XLOC package using translation API.')
