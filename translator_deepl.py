@@ -20,6 +20,8 @@ class DeepLTranslator(Translator):
         return cls._instance
 
     def translate_text(self, text, source_language, target_language, note):
+        if target_language.upper() == "EN":
+            target_language = "EN-US"
         try:
             if source_language is None:
                 text = self.deepl_client.translate_text(text,
