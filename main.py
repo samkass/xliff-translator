@@ -75,7 +75,7 @@ def process_xloc_package(xloc_dir, translator):
 
 parser = argparse.ArgumentParser(description='Translate XLOC package using translation API.')
 parser.add_argument('path', type=str, help='Path to the XLOC package')
-parser.add_argument('--engine', choices=['openai', 'deepl'], default='openai', help='Translation engine to use')
+parser.add_argument('--engine', choices=['openai', 'deepl'], default='deepl', help='Translation engine to use')
 args = parser.parse_args()
 path = args.path
 translator = None
