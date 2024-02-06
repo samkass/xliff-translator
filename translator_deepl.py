@@ -21,10 +21,15 @@ class DeepLTranslator(Translator):
 
     def translate_text(self, text, source_language, target_language, note):
         try:
-            text = self.deepl_client.translate_text(text,
-                                                    source_lang=source_language.upper(),
-                                                    target_lang=target_language.upper(),
-                                                    context=note)
+            if source_language is None:
+                text = self.deepl_client.translate_text(text,
+                                                        target_lang=target_language.upper(),
+                                                        context=note)
+            else:
+                text = self.deepl_client.translate_text(text,
+                                                        source_lang=source_language.upper(),
+                                                        target_lang=target_language.upper(),
+                                                        context=note)
             translation = text.text
             print(f"Translated text: {translation}")
             return translation

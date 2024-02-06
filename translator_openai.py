@@ -25,7 +25,11 @@ class OpenAITranslator(Translator):
 
     def translate_text(self, text, source_language, target_language, note):
         try:
-            source_language_name = self.get_language_name_from_code(source_language)
+            if source_language is None:
+                source_language_string = ""
+            else:
+                source_language_name = self.get_language_name_from_code(source_language)
+                source_language_string = f"from {source_language_name} "
             target_language_name = self.get_language_name_from_code(target_language)
             if note is None:
                 prompt_note = ""
@@ -36,7 +40,8 @@ class OpenAITranslator(Translator):
                                                                       {"role": "system", "content": "You are a translator model."},
                                                                       {"role": "user",
                                                                        "content": f"Translate the text between the "
-                                                                                  f"<text></text> tags from {source_language_name} "
+                                                                                  f"<text></text> tags "
+                                                                                  f"{source_language_string} "
                                                                                   f"to {target_language_name}. Return "
                                                                                   f"only the translated string (no <text></text> "
                                                                                   f"tags). Be careful with legal terms such as "
