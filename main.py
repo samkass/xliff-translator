@@ -105,7 +105,7 @@ translator = None
 if args.engine == 'openai':
     print(f"Translating text with OpenAI")
     translator = OpenAITranslator()
-if args.engine == 'noop':
+elif args.engine == 'noop':
     print(f"Translating text with Noop")
     translator = NoopTranslator()
     do_write = False

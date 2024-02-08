@@ -10,6 +10,8 @@ load_dotenv()
 class OpenAITranslator(Translator):
     _instance = None
     openai_client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+    # set openai_model as per OPENAI_MODEL environment variable, if not set, use "gpt-4"
+    openai_model = os.getenv('OPENAI_MODEL', "gpt-4")
 
     def __new__(cls):
         if cls._instance is None:
@@ -35,13 +37,13 @@ class OpenAITranslator(Translator):
                 prompt_note = ""
             else:
                 prompt_note = f"For context, after it is translated, the text will be used here in the app: '{note}'."
-            response = self.openai_client.chat.completions.create(model="gpt-3.5-turbo",  # Update the model if needed
+            response = self.openai_client.chat.completions.create(model=self.openai_model,
                                                                   messages=[
-                                                                      {"role": "system", "content": "You are a translator model."},
+                                                                      {"role": "system", "content": "You are a translator model, translating strings in an application from one language to another."},
                                                                       {"role": "user",
                                                                        "content": f"Translate the text between the "
                                                                                   f"<text></text> tags "
-                                                                                  f"{source_language_string} "
+                                                                                  f"{source_language_string}"
                                                                                   f"to {target_language_name}. Return "
                                                                                   f"only the translated string (no <text></text> "
                                                                                   f"tags). Be careful with legal terms such as "
